@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-const { BASE, LOGIN_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./qa_config');
+const { LOGIN_URL, ODOO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./qa_config');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function waitSel(page, sel, tries = 15) {
@@ -24,11 +24,11 @@ async function main() {
 
     try {
         console.log('[L1] login page...');
-        await page.goto(BASE + '/web/login', { waitUntil: 'networkidle0', timeout: 30000 });
+        await page.goto(LOGIN_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         if (!(await waitSel(page, '#login'))) throw new Error('login form no encontrado');
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await sleep(6000);
         console.log('[L2] post-login url=' + page.url());
 
@@ -60,7 +60,7 @@ async function main() {
         });
         console.log('[V2] ' + JSON.stringify(nav1));
         if (!nav1.navbar || nav1.navbarHtml < 100) errors.push('A2-CRASH navbar muerto en app con secciones');
-        if (nav1.hasSections && nav1.sectionsHtml < 10) errors.push('A2 sections renderizó vacio');
+        if (nav1.hasSections && nav1.sectionsHtml < 10) errors.push('A2 sections renderizÃ³ vacio');
         console.log('[V2] breadcrumbs ul en navbar: ' + nav1.breadcrumbUl);
 
         const layout = await page.evaluate(() => {

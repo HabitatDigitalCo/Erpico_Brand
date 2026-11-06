@@ -12,13 +12,14 @@
  */
 
 const BASE = (process.env.ODOO_URL || 'http://localhost:8071').replace(/\/+$/, '');
-const LOGIN_URL = `${BASE}/web/login`;
-const ODOO_URL = `${BASE}/odoo`;
+const DB_NAME = process.env.ODOO_DB || 'sidebar_test';
+const DB_QUERY = `?db=${encodeURIComponent(DB_NAME)}`;
+const LOGIN_URL = `${BASE}/web/login${DB_QUERY}`;
+const ODOO_URL = `${BASE}/odoo${DB_QUERY}`;
 const ADMIN_USERNAME = process.env.ODOO_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ODOO_PASSWORD || 'admin';
 // BD de QA. Necesaria para /web/session/authenticate (jsonrpc) y para correr
 // cdp/seed_users.py; al apuntar a otro entorno hay que cambiar las dos cosas.
-const DB_NAME = process.env.ODOO_DB || 'sidebar_test';
 
 // uids verificados en la BD de QA (sidebar_test). Son expectativas del test, no
 // secretos, pero se pueden overridear si la BD tiene otro seed.

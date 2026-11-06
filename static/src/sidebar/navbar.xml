@@ -11,7 +11,7 @@
                     class="o_erpico_mobile_toggle"
                     aria-label="Abrir menú"
                     title="Abrir menú"
-                    t-on-click="() => this.env.bus.trigger('erpico:open-drawer')"
+                    t-on-click="(ev) => this.env.bus.trigger('erpico:open-drawer', ev.currentTarget)"
                 >
                     <i class="fa fa-bars" aria-hidden="true"/>
                 </button>

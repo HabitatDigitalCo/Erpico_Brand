@@ -268,3 +268,29 @@ Todos verdes en `http://localhost:8071` tras `docker restart`:
 
 No se ejecutó `cdp_hoot.js`: el runner de `/web/tests` no funciona con Puppeteer en este entorno
 (D-34). Los asserts de `nav_entries.js` siguen sin poder ejecutarse; la cobertura real es CDP.
+
+### Corrida Docker `erpico_sidebar_qa` — 2026-11-06
+
+Instancia aislada: contenedor local `erpico-odoo`, Odoo 19, `http://localhost:8069`, base
+`erpico_sidebar_qa`. Se instalaron sidebar, roles ERPICO y módulos funcionales necesarios para la
+matriz. La base preexistente `erpico_dev` no se modificó.
+
+| Script | Resultado |
+|---|---|
+| `cdp_smoke.js` | ✅ |
+| `cdp_home.js` | ✅ |
+| `cdp_allapps.js` | ✅ |
+| `cdp_drawer_nav.js` | ✅ |
+| `cdp_hover.js` | ✅ |
+| `cdp_matrix.js` | ✅ |
+| `cdp_productos_dom.js` | ✅ |
+| `cdp_verify_keyboard.js` | ✅ |
+| `check_report_menus.js` | ✅ |
+| `cdp_settings.js` | ✅ |
+| `cdp_layout.js` | ✅ |
+| `cdp_drawer.js` | ⚠️ cierre/navegación/panel móvil/foco inicial OK; retorno de foco tras backdrop pendiente (`BUG-S-058`) |
+| `check_product_menus.js` | ⚠️ contrato de `ventas` espera Listas de precios y Atributos, pero backend no los entrega; requiere decisión de permisos o ajuste de fixture |
+
+`cdp_drawer.js` cubre foco inicial, panel móvil de aplicaciones adicionales, backdrop, Escape y
+botón cerrar. El único check pendiente es que backdrop restaure foco en
+`.o_erpico_mobile_toggle` después de abrir “Todas las aplicaciones”.

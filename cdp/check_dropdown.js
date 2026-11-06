@@ -8,7 +8,7 @@ const { LOGIN_URL, ODOO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./qa_co
     await page.goto(LOGIN_URL, {waitUntil: 'networkidle0', timeout: 30000});
     await page.type('#login', ADMIN_USERNAME);
     await page.type('#password', ADMIN_PASSWORD);
-    await page.click('button.btn-primary[type="submit"]');
+    await page.click('.oe_login_form button[type="submit"]');
     await new Promise(r => setTimeout(r, 5000));
     await page.goto(ODOO_URL, {waitUntil: 'networkidle0', timeout: 30000});
     await new Promise(r => setTimeout(r, 5000));

@@ -56,6 +56,23 @@ def _old_groups(env):
     return out
 
 
+def _group_references(env, group):
+    """References that make automatic deletion of a legacy group unsafe."""
+    checks = {
+        "menus": ("ir.ui.menu", [("group_ids", "in", group.ids)]),
+        "record rules": ("ir.rule", [("groups", "in", group.ids)]),
+        "access rights": ("ir.model.access", [("group_id", "in", group.ids)]),
+        "implied groups": ("res.groups", [("implied_ids", "in", group.ids)]),
+        "views": ("ir.ui.view", [("groups_id", "in", group.ids)]),
+        "actions": ("ir.actions.actions", [("groups_id", "in", group.ids)]),
+    }
+    return {
+        label: env[model].sudo().search_count(domain)
+        for label, (model, domain) in checks.items()
+        if model in env
+    }
+
+
 def post_init_hook(env):
     old_groups = _old_groups(env)
     if not old_groups:
@@ -83,15 +100,22 @@ def post_init_hook(env):
                 "erpico_web_sidebar_roles: %d usuario(s) de %s -> %s",
                 len(users), old_group.name, new_group.name,
             )
-        # No borrar si el core o un addon lo referencia: BUG-S-035 dejó los
-        # menús nativos sin tocar, pero un third-party podría haberlos usado.
-        menu_count = env["ir.ui.menu"].sudo().search_count([("group_ids", "in", old_group.ids)])
-        if menu_count:
+        # No borrar si core o un addon todavía referencia el grupo. Un menú no
+        # es la única referencia posible: reglas, ACL, vistas, acciones y otros
+        # grupos también pueden depender de él.
+        references = _group_references(env, old_group)
+        active_references = {label: count for label, count in references.items() if count}
+        if active_references:
             _logger.warning(
-                "erpico_web_sidebar_roles: %s sigue en %d menu(s); NO se borra (solo se migraron los usuarios)",
-                old_group.name, menu_count,
+                "erpico_web_sidebar_roles: %s sigue referenciado (%s); NO se borra (solo se migraron los usuarios)",
+                old_group.name,
+                ", ".join("%s=%d" % item for item in active_references.items()),
             )
             continue
         old_name_for_log = old_group.name
+        env["ir.model.data"].sudo().search([
+            ("model", "=", "res.groups"),
+            ("res_id", "=", old_group.id),
+        ]).unlink()
         old_group.unlink()
         _logger.info("erpico_web_sidebar_roles: grupo obsoleto %s borrado", old_name_for_log)

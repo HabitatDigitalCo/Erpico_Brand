@@ -1,4 +1,4 @@
-﻿const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer');
 
 const { LOGIN_URL, ODOO_URL, USERS } = require('./qa_config');
 const { expectedRailFor } = require('./expected_rail');
@@ -54,14 +54,14 @@ async function loginIsolated(browser, user, viewport) {
     }
     await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForSelector('#login', { timeout: 15000 });
-    await page.waitForSelector('button.btn-primary[type="submit"]', { visible: true, timeout: 15000 });
+    await page.waitForSelector('.oe_login_form button[type="submit"]', { visible: true, timeout: 15000 });
     await page.waitForFunction(() => !!window.odoo, { timeout: 30000 }).catch(() => {});
     await sleep(800);
     await page.type('#login', user.u);
     await page.type('#password', user.p);
     await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-        page.click('button.btn-primary[type="submit"]'),
+        page.click('.oe_login_form button[type="submit"]'),
     ]);
     // Espera real del webclient: rail montado o mensaje de login invalido
     await page.waitForFunction(

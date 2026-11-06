@@ -33,10 +33,8 @@ obvios, añadir un bloque en *Detalle de bugs abiertos*. Al resolverlo, moverlo 
 | ID | Fecha | Vista / Origen | Descripción | Tipo | Prioridad | Estado |
 |----|-------|----------------|-------------|------|-----------|--------|
 | BUG-S-017 | 2026-09-23 | Regresión debranding (Fase 5) | Suite `erpico_debranding` **falla 3 de 22** en stack `sidebar_test` — fallos **ajenos al módulo** (ver detalle abajo). | Entorno/build | ⚪ Baja | En progreso (rama debranding) |
-| BUG-S-022 | 2026-09-23 | Drawer móvil (sidebar.xml:130) | **Drawer móvil no alcanza las apps fuera del rail.** Itera `state.entries` (mismo contenido que el rail, D-29), pero el panel "Todas las aplicaciones" vive dentro del `<nav>` del rail, que es `d-none d-lg-flex` → en móvil no se abre. Contactos, Facturación, Discuss, Calendario, Ajustes y cualquier app no mapeada quedan inalcanzables en pantallas pequeñas. | UI/UX | ⚪ Baja | Abierto (mitigado: desde v1.1 el drawer replica el rail completo, incl. Marketing con sus 2 grupos) |
 | BUG-S-031 | 2026-09-24 | Drawer móvil (sidebar.xml:164) | Drawer submenú solo **1 nivel**: itera `app._childrenTree` directo. El flyout es recursivo (t-call FlyoutMenu); apps con sub-submenús no muestran la profundidad en el drawer. | UI/UX | ⚪ Baja | Abierto |
 | BUG-S-032 | 2026-09-24 | Accesibilidad | Rail sin `aria-current`/`aria-expanded`; toggle móvil sin `aria-expanded`; drawer sin focus trap ni redirect de foco; flyout sin manejo de foco/`aria`; all-apps sin foco visible propio. | UI/UX | ⚪ Baja | Abierto |
-| BUG-S-033 | 2026-09-24 | Topbar/rail (logos) | Logos `<a href="/odoo">` (sidebar.xml:13, navbar.xml:19) navegan con recarga plana del webclient → pierde estado SPA (a diferencia de `selectMenu` del core con `href` + `.prevent`). | UI/UX | ⚪ Baja | Abierto |
 | BUG-S-041 | 2026-09-27 | Website | **La seccion Website del rail no se puede ocultar por role.** `website.menu_website_configuration` solo esta gateado por `base.group_user` (que core concede a todo internal user) y sus submenus (`menu_site`, `menu_edit_menu`, `menu_current_page`, `menu_page_properties`, `menu_ace_editor`) **no tienen grupo**. No hay punto de corte limpio. El rol `Website ERPICO` mantiene `website.group_website_designer` y la entrada sigue visible para cualquier usuario interno; la matriz lo confirma (`basic` ve Inicio + Website). | Lógica | ⚪ Baja | Abierto (aceptado por el cliente 2026-09-28) |
 
 ### Detalle de bugs abiertos
@@ -129,6 +127,39 @@ anidados salen con la clase esperada y sin errores de consola.
 |----|-------|----------------|-------------|------|-----------|-----------|
 | BUG-S-055 | 2026-09-30 | `static/src/sidebar/sidebar.xml` (flyout y drawer) | **La entrada "Productos" del rail salia vacia.** Apuntaba a `stock.menu_product_variant_config_stock`, que en Odoo 19 es una **hoja accionable sin hijos**, y las dos plantillas iteraban solo `section.childrenTree` —que en una hoja es `[]`—, o sea que no se dibujaba nada. El menu era alcanzable: el bug era del render, no de permisos. Se agravaba porque `pickMenu` se queda con el **primer** xmlid presente y ese era justamente el sin hijos, asi que ni siquiera caia al contenedor. Fix: cada submenu pasa a ser su propia seccion-hoja y ambas plantillas renderizan `section.leaf` cuando la seccion no trae arbol (`childrenTree.length ? childrenTree : (leaf ? [leaf] : [])`), con el titulo de grupo reservado para las secciones que si tienen arbol para no duplicar el texto (D-41). | UI/UX | Alta | ✅ QA en vivo 2026-09-30: `cdp_productos_dom.js` (nuevo) en 375px y en 1440px. `inv` dibuja 2 items navegables y `basic` los 4, en drawer y en flyout, sin cabeceras de grupo. Antes de existir el fix el mismo script reportaba "el drawer de Productos sigue vacio" |
 | BUG-S-056 | 2026-09-30 | `cdp/seed_users.py` | **`basic` estaba seedeado como usuario interno pelado (`[]`), no con los grupos de las 4 apps que la suite asume.** El script se contradecía a si mismo: los comentarios y las expectativas de `check_report_menus.js` / `cdp_matrix.js` dan por hecho que `basic` tiene `group_sale_salesman`, `group_stock_user`, `group_purchase_user` y `group_pos_user`, y sobre esa base se calibraron los 122 menus del payload y el rail de 9 items. Al re-seedear, `basic` quedo con solo `base.group_user`, su rail cayo a 2 entradas y `check_report_menus.js` habria reportado como fuga todo lo que si deberia ver. Fix: `basic` vuelve a los 4 grupos **usuario** (sin managers). De paso, `password_for` devolvia `"basic"` como default para cualquier login, o sea que un usuario nuevo habria neonataldo con la contrasena `basic`: ahora el default es el propio login. | QA/Config | Media | ✅ Suite 9/9 verde tras el fix; `basic` vuelve a 122 menus y rail de 9 |
+| BUG-S-057 | 2026-11-05 | Drawer móvil / home / hook roles | Drawer no exponía apps fuera del rail en móvil; foco del diálogo y retorno al trigger ausentes; botón Ajustes podía no hacer nada; Home no reaccionaba a `MENUS:APP-CHANGED`; hook legacy validaba solo referencias de menú. | UI/UX/Datos | Alta | Parcial: QA CDP valida todo salvo retorno de foco por backdrop |
+| BUG-S-058 | 2026-11-06 | Drawer móvil (`_closeDrawer`) | Tras abrir “Todas las aplicaciones” y cerrar drawer por backdrop, foco queda en botón desmontado `o_erpico_drawer_allapps_toggle` en vez de volver a `.o_erpico_mobile_toggle`. Foco inicial y resto de navegación pasan. | Accesibilidad | Media | Pendiente — no bloquea operación |
+
+### BUG-S-057 — Correcciones de navegación, accesibilidad y migración
+
+- Drawer incluye ahora “Todas las aplicaciones” para apps permitidas no cubiertas por `NAV_MAP`.
+- Drawer usa `role="dialog"`, `aria-modal`, foco inicial en cerrar, focus trap Tab/Shift+Tab y retorno al trigger al cerrar por Escape o backdrop.
+- El botón Ajustes solo se muestra cuando el menú está disponible para usuario.
+- Logo del rail navega vía `menuService.selectMenu`; fallback `/odoo` sólo si Inicio no está disponible.
+- Home recompone cards al recibir `MENUS:APP-CHANGED`.
+- El hook de migración bloquea borrado automático si grupo legacy sigue en menús, reglas, ACL, herencias de grupos, vistas o acciones; borra XMLIDs sólo cuando borrado es seguro.
+- Requiere validación con Odoo 19 y `cdp/cdp_drawer.js`; no declarar evidencia runtime hasta ejecutarla.
+
+### BUG-S-058 — Retorno de foco por backdrop
+
+**Entorno:** Docker local `erpico-odoo`, base aislada `erpico_sidebar_qa`, Odoo 19,
+viewport 375×667, validado con `cdp/cdp_drawer.js`.
+
+**Reproducción:** abrir drawer → abrir “Todas las aplicaciones” → cerrar mediante backdrop.
+El drawer desaparece, pero `document.activeElement` conserva el último botón interno desmontado
+(`o_erpico_drawer_allapps_toggle`) en vez de `.o_erpico_mobile_toggle`.
+
+**Intentos implementados:** estado explícito de restauración, `onPatched`, restauración diferida y
+handler específico del backdrop. Ninguno modificó el resultado CDP. El runner además vuelve a
+consultar backdrop tras el rerender de “Todas las aplicaciones”, por lo que no prueba un handle
+Puppeteer obsoleto.
+
+**Lo que sí pasa:** foco inicial en botón cerrar, apertura/cierre de drawer, Escape, botón cerrar,
+backdrop, navegación a app/submenú, Settings y panel móvil de aplicaciones adicionales.
+
+**Decisión:** queda pendiente. Es una deuda de accesibilidad, no un bloqueo funcional: navegación y
+cierre del drawer funcionan. Retomar sólo si QA de accesibilidad exige restauración de foco exacta o
+si aparece impacto observable para teclado/lector de pantalla.
 
 **Alcance de BUG-S-056:** al arreglar el seed se creo el usuario QA `inv` (uid 23), que es solo el rol
 Inventario ERPICO. No es cosmetico: es el unico usuario QA con `stock.group_stock_user` y **sin**

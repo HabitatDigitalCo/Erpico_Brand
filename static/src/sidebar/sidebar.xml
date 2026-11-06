@@ -9,17 +9,17 @@
         >
             <!-- Rail -->
             <div class="o_erpico_rail">
-                <a
-                    href="/odoo"
+                <button
+                    type="button"
                     class="o_erpico_rail_logo"
                     aria-label="ERPICO, inicio"
-                    t-on-click="() => { this.state.allAppsOpen = false; }"
+                    t-on-click="() => this.goHome()"
                 >
                     <img
                         src="/erpico_web_sidebar/static/src/images/erpico-favicon.png"
                         alt="ERPICO"
                     />
-                </a>
+                </button>
 
                 <div class="o_erpico_rail_apps">
                     <t t-foreach="state.entries" t-as="entry" t-key="entry.id">
@@ -31,6 +31,10 @@
                             t-att-data-xmlids="xmlidsOf(entry)"
                             t-att-title="entry.label"
                             t-att-aria-label="entry.label"
+                            t-att-aria-current="this.isEntryActive(entry) ? 'page' : undefined"
+                            t-att-aria-expanded="state.flyoutEntry and state.flyoutEntry.id === entry.id ? 'true' : 'false'"
+                            aria-controls="erpico-sidebar-flyout"
+                            aria-haspopup="menu"
                             t-on-mouseenter="() => this.hoverEntry(entry)"
                             t-on-mouseleave="() => this.clearHover()"
                             t-on-click.stop="() => this.selectEntry(entry)"
@@ -55,6 +59,8 @@
                         t-att-class="{ 'o_active': state.allAppsOpen }"
                         title="Todas las aplicaciones"
                         aria-label="Todas las aplicaciones"
+                        t-att-aria-expanded="state.allAppsOpen ? 'true' : 'false'"
+                        aria-controls="erpico-allapps"
                         t-on-click="() => this.toggleAllApps()"
                     >
                         <svg class="o_erpico_rail_icon o_erpico_rail_svg" aria-hidden="true">
@@ -68,6 +74,8 @@
             <div
                 t-if="state.flyoutEntry and !state.allAppsOpen"
                 class="o_erpico_flyout"
+                id="erpico-sidebar-flyout"
+                role="menu"
                 t-on-mouseenter="() => this._onFlyoutEnter()"
                 t-on-mouseleave="() => this._onFlyoutLeave()"
             >
@@ -102,7 +110,7 @@
             </div>
 
             <!-- Panel "Todas las aplicaciones" -->
-            <div t-if="state.allAppsOpen" class="o_erpico_allapps">
+            <div t-if="state.allAppsOpen" id="erpico-allapps" class="o_erpico_allapps" role="dialog" aria-label="Todas las aplicaciones">
                 <div class="o_erpico_flyout_header">
                     <strong>Todas las aplicaciones</strong>
                 </div>
@@ -133,8 +141,8 @@
 
         <!-- Drawer móvil -->
         <t t-if="state.drawerOpen">
-            <div class="o_erpico_backdrop" t-on-click="() => { this.state.drawerOpen = false; }" />
-            <nav class="o_erpico_drawer">
+            <div class="o_erpico_backdrop" t-on-click="(ev) => this._closeDrawerFromBackdrop(ev)" />
+            <nav class="o_erpico_drawer" t-ref="drawer" role="dialog" aria-modal="true" aria-label="Aplicaciones ERPICO">
                 <div class="o_erpico_drawer_header">
                     <img
                         src="/erpico_web_sidebar/static/src/images/erpico-logo-horizontal.png"
@@ -144,7 +152,8 @@
                     <button
                         type="button"
                         class="o_erpico_drawer_close"
-                        t-on-click="() => { this.state.drawerOpen = false; }"
+                        data-autofocus="true"
+                        t-on-click="() => this._closeDrawer()"
                         aria-label="Cerrar menú"
                     >
                         <i class="fa fa-times" aria-hidden="true"/>
@@ -191,9 +200,30 @@
                     </t>
                 </div>
 
+                <t t-if="drawerOtherApps.length">
+                    <div class="o_erpico_drawer_allapps">
+                        <button
+                            type="button"
+                            class="o_erpico_drawer_allapps_toggle"
+                            t-att-aria-expanded="state.drawerAllAppsOpen ? 'true' : 'false'"
+                            aria-controls="erpico-drawer-allapps"
+                            t-on-click="() => this.toggleDrawerAllApps()"
+                        >
+                            <i class="fa fa-th" aria-hidden="true"/>
+                            <span>Todas las aplicaciones</span>
+                        </button>
+                        <ul t-if="state.drawerAllAppsOpen" id="erpico-drawer-allapps" class="o_erpico_drawer_allapps_list">
+                            <t t-foreach="drawerOtherApps" t-as="app" t-key="app.id">
+                                <li><button type="button" t-on-click="() => this.openApp(app)" t-esc="app.name"/></li>
+                            </t>
+                        </ul>
+                    </div>
+                </t>
+
                 <div class="o_erpico_drawer_footer">
                     <SwitchCompanyMenu />
                     <button
+                        t-if="canAccessSettings"
                         type="button"
                         class="o_erpico_drawer_settings"
                         t-on-click="() => this.goToSettings()"
@@ -245,12 +275,8 @@
     <t t-name="erpico_web_sidebar.DrawerMenu">
         <ul class="o_erpico_drawer_sub">
             <t t-foreach="items" t-as="item" t-key="item.id">
-                <li
-                    t-if="!item.childrenTree.length"
-                    t-att-class="{ 'o_active': activeId ? activeId === item.id : false }"
-                    t-on-click="() => this.openItem(item)"
-                >
-                    <span t-esc="item.name"/>
+                <li t-if="!item.childrenTree.length" t-att-class="{ 'o_active': activeId ? activeId === item.id : false }">
+                    <button type="button" t-on-click="() => this.openItem(item)" t-esc="item.name"/>
                 </li>
                 <li t-else="" class="o_erpico_drawer_group_item">
                     <span class="o_erpico_drawer_subgroup" t-esc="item.name"/>

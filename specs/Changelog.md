@@ -5,6 +5,34 @@
 
 ---
 
+## Sesión 2026-11-05 — Navegación móvil, accesibilidad y migración segura
+
+### Cambios
+
+- Drawer móvil: acceso a apps permitidas fuera de las 10 entradas del rail.
+- Drawer: diálogo accesible, foco inicial, ciclo Tab/Shift+Tab y retorno al trigger al cerrar.
+- Ajustes móvil sólo aparece cuando usuario tiene menú permitido.
+- Logo del rail usa navegación SPA hacia Inicio; conserva fallback a `/odoo`.
+- Home vuelve a resolver cards tras `MENUS:APP-CHANGED`.
+- Submenús hoja del drawer usan botones semánticos.
+- Migración de grupos legacy valida más referencias antes de borrar y elimina XMLIDs únicamente en borrado seguro.
+- `cdp/cdp_drawer.js` verifica foco inicial, retorno de foco y panel móvil de todas las aplicaciones.
+
+### Pendiente de validación
+
+- Actualizar addon, reiniciar Odoo y ejecutar `node cdp/cdp_drawer.js` contra stack Odoo 19.
+- Ejecutar suite CDP completa antes de cerrar BUG-S-057 como validado en runtime.
+
+### QA Odoo Docker — 2026-11-06
+
+- Instancia local: `erpico-odoo`, base aislada `erpico_sidebar_qa`.
+- Verdes: `cdp_smoke.js`, `cdp_home.js`, `cdp_allapps.js`, `cdp_drawer_nav.js`, `cdp_hover.js`, `cdp_matrix.js`, `cdp_productos_dom.js`, `cdp_verify_keyboard.js`.
+- `cdp_drawer.js`: abre/cierra drawer, foco inicial, panel móvil de aplicaciones y navegación correctos; falla sólo retorno de foco tras backdrop, registrado como `BUG-S-058`.
+- La suite global de Odoo no es criterio de este addon: `--test-enable` ejecutó tests upstream y expuso fallos del empaquetado oficial (`odoo-bin` ausente en ruta esperada por tests CLI).
+- Se intentó corregir retorno de foco por backdrop mediante estado explícito, `onPatched`, callback diferido y handler dedicado. La evidencia CDP no cambia; se mantiene como `BUG-S-058` pendiente, no bloqueante.
+
+---
+
 ## Sesión 2026-09-30 — Submenús de Producto en el sidebar (D-41, BUG-S-055/056)
 
 ### Qué se pidió

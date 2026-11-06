@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const { BASE, LOGIN_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./qa_config');
+const { LOGIN_URL, ODOO_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = require('./qa_config');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function waitSel(page, sel, tries = 30) {
     for (let i = 0; i < tries; i++) {
@@ -20,13 +20,13 @@ async function flyoutVisible(page) {
     page.on('pageerror', e => errors.push('pageerror: ' + e.message));
     page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
     try {
-        await page.goto(BASE + '/web/login', { waitUntil: 'networkidle0', timeout: 30000 });
+        await page.goto(LOGIN_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         await waitSel(page, '#login');
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await sleep(6000);
-        await page.goto(BASE + '/odoo', { waitUntil: 'networkidle0', timeout: 30000 });
+        await page.goto(ODOO_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         await waitSel(page, '.o_erpico_rail_btn');
         await sleep(1500);
 
@@ -34,7 +34,7 @@ async function flyoutVisible(page) {
         await page.mouse.move(5, 5);
         await sleep(300);
 
-        // Keyboard open: focus segundo botón + ArrowRight
+        // Keyboard open: focus segundo botÃ³n + ArrowRight
         const btns = await page.$$('.o_erpico_rail_apps .o_erpico_rail_btn');
         console.log('[K2] botones=' + btns.length);
         await btns[0].focus();
@@ -42,9 +42,9 @@ async function flyoutVisible(page) {
         await sleep(400);
         const afterKeyboard = await flyoutVisible(page);
         console.log('[K3] flyout tras ArrowRight: ' + afterKeyboard);
-        if (!afterKeyboard) errors.push('A5: teclado no abrió flyout');
+        if (!afterKeyboard) errors.push('A5: teclado no abriÃ³ flyout');
 
-        // Ahora mouse entra al boton y sale → flyout debe cerrar (A5 fix)
+        // Ahora mouse entra al boton y sale â†’ flyout debe cerrar (A5 fix)
         const box = await btns[0].boundingBox();
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
         await sleep(300);

@@ -35,7 +35,7 @@ async function main() {
 
     try {
         // 1. Login admin
-        console.log('[C1] Login admin → /odoo');
+        console.log('[C1] Login admin â†’ /odoo');
         await page.goto(LOGIN_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(2000);
         // Wait for login form to appear
@@ -43,24 +43,24 @@ async function main() {
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
         // Click the submit button
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(2000);
         const url = page.url();
-        console.log(`  ✅ URL after login: ${url}`);
+        console.log(`  âœ… URL after login: ${url}`);
         if (url.includes('/odoo/dashboards') || url.includes('/odoo')) {
-            console.log('  ✅ Login exitoso');
+            console.log('  âœ… Login exitoso');
         }
     } catch (e) {
         errors.push(`C1: ${e.message}`);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     // 2. Check console errors
     console.log('[C1] Verificar 0 errores de consola');
     await sleep(2000);
     const errorCount = errors.length;
-    console.log(`  ${errorCount === 0 ? '✅' : '❌'} ${errorCount} error(es) de consola`);
+    console.log(`  ${errorCount === 0 ? 'âœ…' : 'âŒ'} ${errorCount} error(es) de consola`);
     if (errorCount > 0) {
         errors.forEach(e => console.log(`    - ${e}`));
     }
@@ -68,21 +68,21 @@ async function main() {
     // 3. Check navbar present
     console.log('[C2] Navbar .o_main_navbar presente');
     const navbar = await page.$('.o_main_navbar');
-    console.log(`  ${navbar ? '✅' : '❌'} .o_main_navbar ${navbar ? 'encontrado' : 'NO encontrado'}`);
+    console.log(`  ${navbar ? 'âœ…' : 'âŒ'} .o_main_navbar ${navbar ? 'encontrado' : 'NO encontrado'}`);
 
     // 4. Check rail visible (verifica visibilidad real, no solo DOM)
     console.log('[C2] Rail visible con las entradas de NAV_MAP (D-29)');
     const railBtns = await page.$$eval('.o_erpico_rail_btn', els =>
         els.filter(el => el.offsetParent !== null)
     );
-    console.log(`  ✅ Rail visible con ${railBtns.length} botones`);
+    console.log(`  âœ… Rail visible con ${railBtns.length} botones`);
 
     // 5. Landing = home de ERPICO (D-33), no el dashboard nativo (D-10)
     console.log('[C5] Landing = Inicio (home ERPICO)');
     const currentUrl = page.url();
     console.log(`  URL actual: ${currentUrl}`);
     const isHome = await page.$('.o_erpico_home');
-    console.log(`  ${isHome ? '✅' : '❌'} .o_erpico_home ${isHome ? 'renderizado' : 'NO renderizado'}`);
+    console.log(`  ${isHome ? 'âœ…' : 'âŒ'} .o_erpico_home ${isHome ? 'renderizado' : 'NO renderizado'}`);
     if (!isHome) {
         errors.push('El landing no es el home de ERPICO');
     }
@@ -91,9 +91,9 @@ async function main() {
     console.log('');
     console.log('=== Resumen ===');
     if (errors.length === 0) {
-        console.log('✅ Todos los checks pasaron');
+        console.log('âœ… Todos los checks pasaron');
     } else {
-        console.log(`❌ ${errors.length} error(es):`);
+        console.log(`âŒ ${errors.length} error(es):`);
         errors.forEach(e => console.log(`  - ${e}`));
     }
 

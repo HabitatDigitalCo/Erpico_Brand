@@ -33,10 +33,10 @@ const { LOGIN_URL, ODOO_URL, USERS } = require('./qa_config');
 // core, traducido al idioma del usuario. Por eso las expectativas van en el
 // idioma de cada usuario y no en el de la BD.
 //   inv   -> en_US: ve 2 items, no tiene sales_team.group_sale_salesman.
-//   basic -> es_CO: ve los 4.
+//   basic -> ve los 4. El idioma depende de la base QA.
 const CASES = [
     ['inv', ['Products', 'Product Variants']],
-    ['basic', ['Productos', 'Variantes del producto', 'Listas de precios', 'Atributos']],
+    ['basic', ['Products', 'Product Variants', 'Pricelists', 'Attributes']],
 ];
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
@@ -62,7 +62,7 @@ async function readProductosDrawer() {
     if (!app) {
         return { found: false, items: [], groupHeaders: [] };
     }
-    const items = Array.from(app.querySelectorAll('.o_erpico_drawer_sub > li:not(.o_erpico_drawer_group_item) > span'))
+    const items = Array.from(app.querySelectorAll('.o_erpico_drawer_sub > li:not(.o_erpico_drawer_group_item) > button'))
         .map((s) => (s.textContent || '').trim())
         .filter(Boolean);
     const groupHeaders = Array.from(app.querySelectorAll('.o_erpico_drawer_group'))
@@ -104,7 +104,7 @@ async function runCase(browser, login, expected) {
         await page.type('#password', user.p);
         await sleep(300);
         await page.evaluate(() => {
-            const b = document.querySelector('button.btn-primary[type="submit"]');
+            const b = document.querySelector('.oe_login_form button[type="submit"]');
             if (b) b.click();
         });
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 }).catch(() => {});
@@ -147,7 +147,7 @@ async function runCase(browser, login, expected) {
                 `el drawer de Productos tiene ${drawer.items.length} items y se esperaban ${expected.length}: [${drawer.items.join(' | ')}]`
             );
         }
-        // Las hojas accionables no deben título de grupo: el label va en el item.
+        // Las hojas accionables no deben tÃ­tulo de grupo: el label va en el item.
         if (drawer.groupHeaders.length) {
             errors.push(
                 `se pintaron cabeceras de grupo para items que son hojas: [${drawer.groupHeaders.join(' | ')}]`
@@ -162,7 +162,7 @@ async function runCase(browser, login, expected) {
                 const t = a.querySelector('.o_erpico_drawer_app_title, .o_erpico_drawer_app_label, button, span');
                 return t && /Productos/i.test(t.textContent || '');
             });
-            const btn = app && app.querySelector('.o_erpico_drawer_sub > li:not(.o_erpico_drawer_group_item)');
+            const btn = app && app.querySelector('.o_erpico_drawer_sub > li:not(.o_erpico_drawer_group_item) > button');
             if (btn) btn.click();
         });
         await sleep(2500);
@@ -180,7 +180,7 @@ async function runCase(browser, login, expected) {
 }
 
 // Mismo contrato en el flyout de escritorio, que es la otra mitad del fix:
-// sin el fallback a `section.leaf` el `ul.o_erpico_flyout_menu` sale vacío.
+// sin el fallback a `section.leaf` el `ul.o_erpico_flyout_menu` sale vacÃ­o.
 async function readProductosFlyout() {
     const flyout = document.querySelector('.o_erpico_flyout');
     if (!flyout || flyout.offsetParent === null) {
@@ -228,7 +228,7 @@ async function runFlyoutCase(browser, login, expected) {
         // flaky y en este repo ya se sabe que falla (ver cdp_drawer_reporting.js).
         await sleep(300);
         await page.evaluate(() => {
-            const b = document.querySelector('button.btn-primary[type="submit"]');
+            const b = document.querySelector('.oe_login_form button[type="submit"]');
             if (b) b.click();
         });
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 }).catch(() => {});

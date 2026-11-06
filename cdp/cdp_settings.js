@@ -27,7 +27,7 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -46,7 +46,7 @@ async function main() {
             await sleep(2000);
 
             const drawerAfter = await page.$('.o_erpico_drawer');
-            console.log(`  ${!drawerAfter ? '✅' : '❌'} Drawer ${!drawerAfter ? 'cierra' : 'SIGUE ABIERTO'} tras click Ajustes`);
+            console.log(`  ${!drawerAfter ? 'âœ…' : 'âŒ'} Drawer ${!drawerAfter ? 'cierra' : 'SIGUE ABIERTO'} tras click Ajustes`);
             if (drawerAfter) {
                 errors.push('El drawer no cierra tras click en Ajustes');
             }
@@ -54,32 +54,32 @@ async function main() {
             const currentUrl = page.url();
             console.log(`  URL actual: ${currentUrl}`);
             if (currentUrl.endsWith('/odoo/settings')) {
-                console.log('  ✅ Navegó a Ajustes (BUG-S-012 resuelto)');
+                console.log('  âœ… NavegÃ³ a Ajustes (BUG-S-012 resuelto)');
             } else {
-                console.log('  ❌ No navegó a /odoo/settings (BUG-S-012 no resuelto)');
-                errors.push(`goToSettings() no navegar a /odoo/settings (quedó en ${currentUrl})`);
+                console.log('  âŒ No navegÃ³ a /odoo/settings (BUG-S-012 no resuelto)');
+                errors.push(`goToSettings() no navegar a /odoo/settings (quedÃ³ en ${currentUrl})`);
             }
         } else {
-            console.log('  ❌ Botón Ajustes no encontrado');
+            console.log('  âŒ BotÃ³n Ajustes no encontrado');
         }
 
         const dropdown = await page.$('.o-dropdown');
-        console.log(`  ${dropdown ? '✅' : '❌'} SwitchCompanyMenu dropdown ${dropdown ? 'presente' : 'NO presente'}`);
+        console.log(`  ${dropdown ? 'âœ…' : 'âŒ'} SwitchCompanyMenu dropdown ${dropdown ? 'presente' : 'NO presente'}`);
 
         const bodyText = await page.evaluate(() => document.body.innerText.length);
-        console.log(`  ✅ Body text length: ${bodyText} (bug era 43 chars)`);
+        console.log(`  âœ… Body text length: ${bodyText} (bug era 43 chars)`);
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     console.log('');
     console.log('=== Resumen ===');
     if (errors.length === 0) {
-        console.log('✅ Todos los checks pasaron');
-        console.log('  BUG-S-012: goToSettings() navega correctamente en móvil');
+        console.log('âœ… Todos los checks pasaron');
+        console.log('  BUG-S-012: goToSettings() navega correctamente en mÃ³vil');
     } else {
-        console.log(`❌ ${errors.length} error(es):`);
+        console.log(`âŒ ${errors.length} error(es):`);
         errors.forEach(e => console.log(`  - ${e}`));
     }
 

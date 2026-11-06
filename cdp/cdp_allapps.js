@@ -35,7 +35,7 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -47,11 +47,11 @@ async function main() {
 
         const allAppsBtn = await page.$('.o_erpico_rail_footer .o_erpico_rail_btn');
         if (!allAppsBtn) {
-            console.log('  ❌ Botón allApps no encontrado');
+            console.log('  âŒ BotÃ³n allApps no encontrado');
             errors.push('AllApps button not found');
         } else {
             const title = await page.evaluate(el => el.getAttribute('title'), allAppsBtn);
-            console.log(`  [A1] Botón allApps: "${title}"`);
+            console.log(`  [A1] BotÃ³n allApps: "${title}"`);
             const c = await mouseCenter(page, allAppsBtn);
             await sleep(1500);
             console.log(`  [A2] Click allApps (coords ${Math.round(c.x)},${Math.round(c.y)})`);
@@ -60,7 +60,7 @@ async function main() {
         const allAppsPanel = await page.$('.o_erpico_allapps');
         const panelOpen = allAppsPanel && (await allAppsPanel.evaluate(el => getComputedStyle(el).display !== 'none'));
         if (!panelOpen) {
-            console.log('  ❌ Panel allApps no visible');
+            console.log('  âŒ Panel allApps no visible');
             errors.push('AllApps panel not visible');
         } else {
             const appItems = await page.$$('.o_erpico_allapps_grid li');
@@ -75,15 +75,15 @@ async function main() {
             console.log(`  [A4] Items sin icono: ${missingIcon}`);
             if (missingIcon > 0) errors.push(`${missingIcon} items sin icono en allApps`);
 
-            // Clic en un item → debe cerrar panel y navegar a la app
+            // Clic en un item â†’ debe cerrar panel y navegar a la app
             const firstItem = await page.$('.o_erpico_allapps_grid li');
             if (firstItem) {
                 await mouseCenter(page, firstItem);
                 await sleep(2500);
                 const panelStillOpen = await page.$('.o_erpico_allapps');
                 const panelVisible = panelStillOpen && (await panelStillOpen.evaluate(el => el.offsetParent !== null && getComputedStyle(el).display !== 'none'));
-                console.log(`  [A5] Tras click en item → panel ${panelVisible ? 'sigue abierto (❌)' : 'cerrado (✅)'}`);
-                if (panelVisible) errors.push('AllApps panel no cierra después de clic');
+                console.log(`  [A5] Tras click en item â†’ panel ${panelVisible ? 'sigue abierto (âŒ)' : 'cerrado (âœ…)'}`);
+                if (panelVisible) errors.push('AllApps panel no cierra despuÃ©s de clic');
             } else {
                 console.log('  [A5] No hay items para clic');
             }
@@ -105,14 +105,14 @@ async function main() {
         console.log('');
         console.log('=== Resumen AllApps ===');
         if (errors.length === 0) {
-            console.log('✅ Panel allApps funcional');
+            console.log('âœ… Panel allApps funcional');
         } else {
-            console.log(`❌ ${errors.length} error(es):`);
+            console.log(`âŒ ${errors.length} error(es):`);
             errors.forEach(e => console.log(`  - ${e}`));
         }
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     await browser.close();

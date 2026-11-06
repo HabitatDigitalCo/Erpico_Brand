@@ -1,29 +1,29 @@
 /**
- * Drawer móvil: rama recursiva de `erpico_web_sidebar.DrawerMenu` con un usuario
- * que sí tiene submenús de Reportes (D-40 / D-13 / C15).
+ * Drawer mÃ³vil: rama recursiva de `erpico_web_sidebar.DrawerMenu` con un usuario
+ * que sÃ­ tiene submenÃºs de Reportes (D-40 / D-13 / C15).
  *
  * Uso:  node cdp_drawer_reporting.js
  *
  * Para otra BD:  ODOO_URL=... ODOO_USER_BASIC=... ODOO_PASS_BASIC=... node cdp_drawer_reporting.js
  *
- * Por qué este script existe: `cdp_drawer.js` y `cdp_drawer_nav.js` corren como
+ * Por quÃ© este script existe: `cdp_drawer.js` y `cdp_drawer_nav.js` corren como
  * admin, y en el seed de QA el admin no produce ninguna rama anidada de Reportes
  * bajo las apps que comprueba. O sea, la parte recursiva del template quedaba
  * sin ejercitar: si OWL no compartiera el contexto entre `t-call`, o si
- * `activeId` no estuviera declarado en el nivel anidado, el template compilaría
- * con un identificador inexistente y el drawer se dibujaría vacío -- sin que
- * ningún test verde lo notara.
+ * `activeId` no estuviera declarado en el nivel anidado, el template compilarÃ­a
+ * con un identificador inexistente y el drawer se dibujarÃ­a vacÃ­o -- sin que
+ * ningÃºn test verde lo notara.
  *
  * Se corre como `basic` porque es el usuario que tiene los grupos de usuario de
  * Ventas, Inventario, Compras y POS a la vez (esperado por `expected_rail.js`),
  * de modo que Reportes aparece en varias apps y se puede comprobar que la
- * recursión no depende de una app concreta.
+ * recursiÃ³n no depende de una app concreta.
  *
  * Lo que se verifica:
- *   - algún grupo "Reportes" anidado existe (la rama recursiva renderiza);
+ *   - algÃºn grupo "Reportes" anidado existe (la rama recursiva renderiza);
  *   - cuelga de un `li.o_erpico_drawer_group_item` de verdad (no aplanado);
  *   - sus hojas son alcanzables y navegables;
- *   - "Configuración" NO aparece (el gate de permisos se ve en la UI);
+ *   - "ConfiguraciÃ³n" NO aparece (el gate de permisos se ve en la UI);
  *   - cero errores de consola, que es lo que delata un QWeb roto.
  *
  * Dos detalles que costaron un rato y conviene no volver a descubrir:
@@ -131,7 +131,7 @@ async function waitForStableDrawer(page, timeoutMs = 15000) {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', BASIC.u);
         await page.type('#password', BASIC.p);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -172,8 +172,8 @@ async function waitForStableDrawer(page, timeoutMs = 15000) {
             if (reporting.length) {
                 reportApps.push({ app: a.app, reporting });
             }
-            if (all.includes('Configuración')) {
-                errors.push(`${a.app}: "Configuración" aparece en el drawer de un usuario sin grupo manager`);
+            if (all.includes('ConfiguraciÃ³n')) {
+                errors.push(`${a.app}: "ConfiguraciÃ³n" aparece en el drawer de un usuario sin grupo manager`);
             }
         }
 
@@ -243,7 +243,7 @@ async function waitForStableDrawer(page, timeoutMs = 15000) {
         console.log('');
         console.log('=== Resumen Drawer Reporting ===');
         if (!errors.length) {
-            console.log('OK: la rama recursiva renderiza, anida y navega; Configuración sigue oculta.');
+            console.log('OK: la rama recursiva renderiza, anida y navega; ConfiguraciÃ³n sigue oculta.');
         } else {
             console.log(`FALLO: ${errors.length} problema(s):`);
             errors.forEach((e) => console.log(`  - ${e}`));

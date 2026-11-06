@@ -25,14 +25,14 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
         await page.setViewport({ width: 375, height: 667 });
         await page.goto(ODOO_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
-        console.log('[D1] Viewport móvil → login OK');
+        console.log('[D1] Viewport mÃ³vil â†’ login OK');
 
         // Abrir drawer
         const toggleBtn = await page.$('.o_erpico_mobile_toggle');
@@ -48,7 +48,7 @@ async function main() {
         }
 
         const drawer = await page.$('.o_erpico_drawer');
-        console.log(`  Drawer visible: ${drawer ? '✅' : '❌'}`);
+        console.log(`  Drawer visible: ${drawer ? 'âœ…' : 'âŒ'}`);
 
         // Click en una app del drawer (CRM)
         const drawerAppBtn = await page.$('.o_erpico_drawer_app_btn');
@@ -60,10 +60,10 @@ async function main() {
 
             const drawerAfterNav = await page.$('.o_erpico_drawer');
             const drawerVisible = drawerAfterNav && (await drawerAfterNav.evaluate(el => el.offsetParent !== null));
-            console.log(`  [D3] Después de click app → drawer visible: ${drawerVisible ? '⚠️ SÍ (BUG-S-013)' : 'NO — cerró (OK)'}`);
+            console.log(`  [D3] DespuÃ©s de click app â†’ drawer visible: ${drawerVisible ? 'âš ï¸ SÃ (BUG-S-013)' : 'NO â€” cerrÃ³ (OK)'}`);
             if (drawerVisible) errors.push('BUG-S-013: drawer no cierra al navegar app');
         } else {
-            console.log('  ❌ No hay app btn en drawer');
+            console.log('  âŒ No hay app btn en drawer');
         }
 
         // Click en submenu del drawer
@@ -76,11 +76,11 @@ async function main() {
 
             const drawerAfterSub = await page.$('.o_erpico_drawer');
             const drawerVisibleSub = drawerAfterSub && (await drawerAfterSub.evaluate(el => el.offsetParent !== null));
-            console.log(`  [D4] Después de click submenu → drawer visible: ${drawerVisibleSub ? '⚠️ SÍ (BUG-S-013)' : 'NO — cerró (OK)'}`);
+            console.log(`  [D4] DespuÃ©s de click submenu â†’ drawer visible: ${drawerVisibleSub ? 'âš ï¸ SÃ (BUG-S-013)' : 'NO â€” cerrÃ³ (OK)'}`);
             if (drawerVisibleSub) errors.push('BUG-S-013: drawer no cierra al navegar submenu');
         }
 
-        // Click Ajustes (ya probado, debería cerrar)
+        // Click Ajustes (ya probado, deberÃ­a cerrar)
         const settingsBtn = await page.$('.o_erpico_drawer_settings');
         if (settingsBtn) {
             await settingsBtn.hover({ force: true });
@@ -89,20 +89,20 @@ async function main() {
             await sleep(2000);
             const drawerAfterSettings = await page.$('.o_erpico_drawer');
             const drawerVisibleSettings = drawerAfterSettings && (await drawerAfterSettings.evaluate(el => el.offsetParent !== null));
-            console.log(`  [D5] Después de click Ajustes → drawer visible: ${drawerVisibleSettings ? '❌ SÍ (debería cerrar)' : 'NO — cerró (OK)'}`);
+            console.log(`  [D5] DespuÃ©s de click Ajustes â†’ drawer visible: ${drawerVisibleSettings ? 'âŒ SÃ (deberÃ­a cerrar)' : 'NO â€” cerrÃ³ (OK)'}`);
         }
 
         console.log('');
         console.log('=== Resumen Drawer Nav ===');
         if (errors.length === 0) {
-            console.log('✅ Todos los checks pasaron (drawer cierra al navegar)');
+            console.log('âœ… Todos los checks pasaron (drawer cierra al navegar)');
         } else {
-            console.log(`❌ ${errors.length} error(es):`);
+            console.log(`âŒ ${errors.length} error(es):`);
             errors.forEach(e => console.log(`  - ${e}`));
         }
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     await browser.close();

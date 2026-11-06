@@ -19,14 +19,14 @@ async function main() {
         // Login como admin
         await page.goto(`${BASE}/web/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
         await page.waitForSelector('#login', { timeout: 15000 });
-        await page.waitForSelector('button.btn-primary[type="submit"]', { visible: true, timeout: 15000 });
+        await page.waitForSelector('.oe_login_form button[type="submit"]', { visible: true, timeout: 15000 });
         await page.waitForFunction(() => !!window.odoo, { timeout: 30000 }).catch(() => {});
         await sleep(800);
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
         await Promise.all([
             page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-            page.click('button.btn-primary[type="submit"]'),
+            page.click('.oe_login_form button[type="submit"]'),
         ]);
         await page.waitForSelector('.o_erpico_sidebar', { timeout: 60000 });
 
@@ -67,7 +67,7 @@ async function main() {
         console.log(`  passes:   ${result.passes}`);
         console.log(`  failures: ${result.failures}`);
         console.log(`  pending:  ${result.pending}`);
-        console.log(`  duración:  ${result.duration} ms`);
+        console.log(`  duraciÃ³n:  ${result.duration} ms`);
         if (result.failedTests.length) {
             console.log('  tests fallidos:');
             result.failedTests.forEach(t => console.log(`    - ${t}`));

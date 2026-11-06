@@ -27,7 +27,7 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -35,22 +35,27 @@ async function main() {
         await page.goto(ODOO_URL, { waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
-        console.log('[C7] Viewport 375px → toggle → drawer abre');
+        console.log('[C7] Viewport 375px â†’ toggle â†’ drawer abre');
         const toggleBtn = await page.$('.o_erpico_mobile_toggle');
         if (toggleBtn) {
             await toggleBtn.click();
             await sleep(1000);
-            console.log('  ✅ Toggle encontrado y clickado');
+            console.log('  âœ… Toggle encontrado y clickado');
         } else {
-            console.log('  ❌ Toggle button no encontrado');
+            console.log('  âŒ Toggle button no encontrado');
             errors.push('Toggle button not found');
         }
 
         const drawer = await page.$('.o_erpico_drawer');
-        console.log(`  ${drawer ? '✅' : '❌'} Drawer ${drawer ? 'visible' : 'NO visible'}`);
+        console.log(`  ${drawer ? 'âœ…' : 'âŒ'} Drawer ${drawer ? 'visible' : 'NO visible'}`);
+
+        const closeHasFocus = await page.$eval('.o_erpico_drawer_close', el => document.activeElement === el)
+            .catch(() => false);
+        console.log(`  ${closeHasFocus ? 'âœ…' : 'âŒ'} Foco inicial en cierre del drawer`);
+        if (!closeHasFocus) errors.push('Drawer no mueve foco al botÃ³n de cierre');
 
         const backdrop = await page.$('.o_erpico_backdrop');
-        console.log(`  ${backdrop ? '✅' : '❌'} Backdrop ${backdrop ? 'presente' : 'NO presente'}`);
+        console.log(`  ${backdrop ? 'âœ…' : 'âŒ'} Backdrop ${backdrop ? 'presente' : 'NO presente'}`);
 
         // Checks con el drawer ABIERTO (D-29/D-31: mismas entradas que el rail)
         const drawerLogo = await page.$('.o_erpico_drawer_logo');
@@ -58,14 +63,14 @@ async function main() {
         const drawerEntries = await page.$$eval('.o_erpico_drawer_app_btn', els =>
             els.map(el => el.textContent.trim())
         );
-        console.log(`  ${drawerLogo ? '✅' : '❌'} Logo ERPICO presente`);
-        console.log(`  ${settingsBtn ? '✅' : '❌'} Botón Ajustes presente`);
-        console.log(`  [D-entries] Drawer: ${drawerEntries.length} → ${drawerEntries.join(' | ')}`);
+        console.log(`  ${drawerLogo ? 'âœ…' : 'âŒ'} Logo ERPICO presente`);
+        console.log(`  ${settingsBtn ? 'âœ…' : 'âŒ'} BotÃ³n Ajustes presente`);
+        console.log(`  [D-entries] Drawer: ${drawerEntries.length} â†’ ${drawerEntries.join(' | ')}`);
         if (!drawerLogo) {
             errors.push('Logo del drawer no encontrado');
         }
         if (!settingsBtn) {
-            errors.push('Botón Ajustes del drawer no encontrado');
+            errors.push('BotÃ³n Ajustes del drawer no encontrado');
         }
         if (drawerEntries.length !== 10) {
             errors.push(`Se esperaban 10 entradas en el drawer, hay ${drawerEntries.length}`);
@@ -75,30 +80,62 @@ async function main() {
         );
         console.log(`  [D-groups] Grupos Marketing en drawer: ${drawerGroups.join(' | ') || '(ninguno)'}`);
 
-        if (backdrop) {
-            await backdrop.click();
-            await sleep(500);
-            console.log('  ✅ Drawer cierra al clickar backdrop');
+        const allAppsToggle = await page.$('.o_erpico_drawer_allapps_toggle');
+        if (allAppsToggle) {
+            await allAppsToggle.click();
+            await sleep(300);
+            const extraApps = await page.$$eval('.o_erpico_drawer_allapps_list button', els =>
+                els.map(el => el.textContent.trim())
+            );
+            console.log(`  ${extraApps.length ? 'âœ…' : 'âŒ'} Todas las aplicaciones mÃ³vil: ${extraApps.join(' | ')}`);
+            if (!extraApps.length) errors.push('Todas las aplicaciones mÃ³vil no muestra destinos');
+        } else {
+            errors.push('Toggle Todas las aplicaciones no encontrado en drawer');
         }
 
+        // Abrir/cerrar "Todas las aplicaciones" re-renderiza el drawer. Volver
+        // a consultar backdrop evita click sobre un ElementHandle desmontado.
+        const activeBackdrop = await page.$('.o_erpico_backdrop');
+        if (activeBackdrop) {
+            await activeBackdrop.click();
+            await sleep(500);
+            console.log('  âœ… Drawer cierra al clickar backdrop');
+            const focusReturned = await page.$eval('.o_erpico_mobile_toggle', el => document.activeElement === el)
+                .catch(() => false);
+            if (!focusReturned) errors.push('Backdrop no devuelve foco al trigger del drawer');
+        }
+
+        await page.$eval('.o_erpico_mobile_toggle', el => el.click());
+        await sleep(300);
         await page.keyboard.press('Escape');
         await sleep(500);
         const closedAfterEscape = await page.$('.o_erpico_drawer');
-        console.log(`  ${!closedAfterEscape ? '✅' : '❌'} Escape cierra drawer (capture phase)`);
+        console.log(`  ${!closedAfterEscape ? 'âœ…' : 'âŒ'} Escape cierra drawer (capture phase)`);
         if (closedAfterEscape) {
-            errors.push('Escape no cerró el drawer');
+            errors.push('Escape no cerrÃ³ el drawer');
         }
+        const focusAfterEscape = await page.$eval('.o_erpico_mobile_toggle', el => document.activeElement === el)
+            .catch(() => false);
+        if (!focusAfterEscape) errors.push('Escape no devuelve foco al trigger del drawer');
+
+        await page.$eval('.o_erpico_mobile_toggle', el => el.click());
+        await sleep(300);
+        await page.click('.o_erpico_drawer_close');
+        await sleep(500);
+        const focusAfterClose = await page.$eval('.o_erpico_mobile_toggle', el => document.activeElement === el)
+            .catch(() => false);
+        if (!focusAfterClose) errors.push('Botón cerrar no devuelve foco al trigger del drawer');
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     console.log('');
     console.log('=== Resumen ===');
     if (errors.length === 0) {
-        console.log('✅ Todos los checks pasaron');
+        console.log('âœ… Todos los checks pasaron');
     } else {
-        console.log(`❌ ${errors.length} error(es):`);
+        console.log(`âŒ ${errors.length} error(es):`);
         errors.forEach(e => console.log(`  - ${e}`));
     }
 

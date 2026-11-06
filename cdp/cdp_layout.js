@@ -25,7 +25,7 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -75,31 +75,31 @@ async function main() {
         const contentL = measures.contentLeft || 0;
 
         if (measures.sidebarDisplay === 'none') {
-            console.log(`  ⚠️  Sidebar display:none a 1024px — d-lg-flex no aplica en Odoo 19`);
-            // No es un bug del módulo, es del entorno. No incluir en errores.
+            console.log(`  âš ï¸  Sidebar display:none a 1024px â€” d-lg-flex no aplica en Odoo 19`);
+            // No es un bug del mÃ³dulo, es del entorno. No incluir en errores.
         } else if (mainM > 0 && mainL > railW + 5) {
-            console.log(`  ❌ .o_main left=${mainL}px > railWidth=${railW}px con margin=${mainM}px → acumulación`);
+            console.log(`  âŒ .o_main left=${mainL}px > railWidth=${railW}px con margin=${mainM}px â†’ acumulaciÃ³n`);
             errors.push(`R2: .o_main left=${mainL}px (esperado ~${railW}px) con margin=${mainM}px`);
         } else if (mainM > 0 && railW > 0) {
-            console.log(`  ✅ .o_main margin-left=${mainM}px ≈ railWidth=${railW}px (correcto)`);
+            console.log(`  âœ… .o_main margin-left=${mainM}px â‰ˆ railWidth=${railW}px (correcto)`);
         } else if (contentM > 0 && contentL > railW + 5) {
-            console.log(`  ❌ .o_content left=${contentL}px > railWidth=${railW}px → acumulación`);
+            console.log(`  âŒ .o_content left=${contentL}px > railWidth=${railW}px â†’ acumulaciÃ³n`);
             errors.push(`R2: .o_content left=${contentL}px (esperado ~${railW}px) con margin=${contentM}px`);
         } else {
-            console.log(`  ℹ️  Layout: sidebar ${railW}px, márgenes aplicados sin acumulación`);
+            console.log(`  â„¹ï¸  Layout: sidebar ${railW}px, mÃ¡rgenes aplicados sin acumulaciÃ³n`);
         }
 
         console.log('');
         console.log('=== Resumen Layout ===');
         if (errors.length === 0) {
-            console.log('✅ Layout correcto (sin acumulación de margin)');
+            console.log('âœ… Layout correcto (sin acumulaciÃ³n de margin)');
         } else {
-            console.log(`❌ ${errors.length} error(es):`);
+            console.log(`âŒ ${errors.length} error(es):`);
             errors.forEach(e => console.log(`  - ${e}`));
         }
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     await browser.close();

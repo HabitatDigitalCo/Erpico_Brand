@@ -211,7 +211,17 @@ $erpico-allapps-w: 360px;
         align-items: center;
         justify-content: center;
         height: $erpico-rail-logo-h;
+        width: 100%;
+        padding: 0;
+        border: 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: transparent;
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid $erpico-horizon;
+            outline-offset: -2px;
+        }
 
         img {
             width: 28px;
@@ -594,16 +604,27 @@ $erpico-allapps-w: 360px;
         padding: 4px 0 4px 0;
 
         li {
-            padding: 8px 16px 8px 44px;
+            padding: 0;
             font-size: 13px;
             color: $erpico-muted;
-            cursor: pointer;
 
-            &:hover,
-            &:focus-visible {
-                background: rgba(255, 255, 255, 0.06);
-                color: $erpico-surface;
-                outline: 1px solid rgba(255, 255, 255, 0.3);
+            > button {
+                display: block;
+                width: 100%;
+                padding: 8px 16px 8px 44px;
+                border: 0;
+                background: transparent;
+                color: inherit;
+                font: inherit;
+                text-align: left;
+                cursor: pointer;
+
+                &:hover,
+                &:focus-visible {
+                    background: rgba(255, 255, 255, 0.06);
+                    color: $erpico-surface;
+                    outline: 1px solid rgba(255, 255, 255, 0.3);
+                }
             }
 
             &.o_active {
@@ -635,11 +656,11 @@ $erpico-allapps-w: 360px;
         // Niveles anidados: "Reporting" cuelga un nivel bajo la app, y sus
         // reportes uno más. Cada `ul` dentro de otro `ul` corre la sangría
         // 16px, así que la profundidad se lee sola sin tocar el template.
-        ul li {
+        ul li > button {
             padding-left: 60px;
         }
 
-        ul ul li {
+        ul ul li > button {
             padding-left: 76px;
         }
 
@@ -679,6 +700,47 @@ $erpico-allapps-w: 360px;
         &:focus-visible {
             background: rgba(255, 255, 255, 0.08);
             color: $erpico-surface;
+        }
+    }
+}
+
+.o_erpico_drawer_allapps {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    .o_erpico_drawer_allapps_toggle,
+    .o_erpico_drawer_allapps_list button {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: $erpico-rail-text;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            background: rgba(255, 255, 255, 0.08);
+            color: $erpico-surface;
+            outline: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    }
+
+    .o_erpico_drawer_allapps_toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .o_erpico_drawer_allapps_list {
+        margin: 0;
+        padding: 0 0 8px;
+        list-style: none;
+
+        button {
+            padding: 8px 16px 8px 44px;
+            font-size: 13px;
         }
     }
 }

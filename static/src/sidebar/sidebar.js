@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, onMounted, onWillUnmount, useState } from "@odoo/owl";
+import { Component, onWillStart, onMounted, onPatched, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { SwitchCompanyMenu } from "@web/webclient/switch_company_menu/switch_company_menu";
@@ -21,6 +21,7 @@ export class Sidebar extends Component {
     setup() {
         this.menuService = useService("menu");
         this.ui = useService("ui");
+        this.drawerRef = useRef("drawer");
         try {
             this.webclient = useService("webclient");
         } catch {
@@ -34,9 +35,11 @@ export class Sidebar extends Component {
             flyoutEntry: null,
             allAppsOpen: false,
             drawerOpen: false,
+            drawerAllAppsOpen: false,
             fullscreenHidden: false,
         });
         this._pointerInFlyout = false;
+        this._restoreDrawerFocus = false;
         this._onKeyDown = this._onKeyDown.bind(this);
         this._openDrawer = this._openDrawer.bind(this);
         this._onUIUpdated = this._onUIUpdated.bind(this);
@@ -63,6 +66,15 @@ export class Sidebar extends Component {
         onMounted(() => {
             window.addEventListener("keydown", this._onKeyDown, true);
             this._syncFullscreen();
+        });
+        onPatched(() => {
+            if (this._restoreDrawerFocus && !this.state.drawerOpen) {
+                this._restoreDrawerFocus = false;
+                // El click del backdrop termina después del patch OWL y puede
+                // conservar foco en un control ya desmontado. Un macrotask
+                // desplaza el foco tras completar el evento nativo.
+                setTimeout(() => document.querySelector(".o_erpico_mobile_toggle")?.focus(), 0);
+            }
         });
         onWillUnmount(() => {
             this.env.bus.removeEventListener("erpico:open-drawer", this._openDrawer);
@@ -161,6 +173,10 @@ export class Sidebar extends Component {
     }
 
     _onKeyDown(ev) {
+        if (this.state.drawerOpen && ev.key === "Tab") {
+            this._trapDrawerFocus(ev);
+            return;
+        }
         if (ev.key === "Escape") {
             if (this.state.drawerOpen) {
                 this._closeDrawer();
@@ -172,16 +188,50 @@ export class Sidebar extends Component {
         }
     }
 
-    _openDrawer() {
+    _openDrawer(ev) {
         this.state.drawerOpen = true;
+        this.state.drawerAllAppsOpen = false;
+        setTimeout(() => {
+            this.drawerRef.el?.querySelector("[data-autofocus]")?.focus();
+        }, 0);
     }
 
-    _closeDrawer() {
+    _closeDrawer({ restoreFocus = true } = {}) {
+        this._restoreDrawerFocus = restoreFocus;
         this.state.drawerOpen = false;
+        this.state.drawerAllAppsOpen = false;
         this.state.flyoutEntry = null;
         this.state.allAppsOpen = false;
         this._pointerInFlyout = false;
         if (this._clearHoverTimer) clearTimeout(this._clearHoverTimer);
+    }
+
+    _closeDrawerFromBackdrop(ev) {
+        ev.preventDefault();
+        this._closeDrawer();
+        // Backdrop recibe el puntero después de que el último botón interno
+        // tuvo foco. Restaurar tras completar evento nativo evita retener un
+        // elemento que OWL acaba de desmontar.
+        setTimeout(() => document.querySelector(".o_erpico_mobile_toggle")?.focus(), 50);
+    }
+
+    _trapDrawerFocus(ev) {
+        const focusable = [...(this.drawerRef.el?.querySelectorAll(
+            'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        ) || [])].filter((element) => !element.hidden);
+        if (!focusable.length) {
+            ev.preventDefault();
+            return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (ev.shiftKey && document.activeElement === first) {
+            ev.preventDefault();
+            last.focus();
+        } else if (!ev.shiftKey && document.activeElement === last) {
+            ev.preventDefault();
+            first.focus();
+        }
     }
 
     selectEntry(entry) {
@@ -206,14 +256,40 @@ export class Sidebar extends Component {
             this.menuService.selectMenu(leaf);
         }
         this.state.allAppsOpen = false;
-        this.state.drawerOpen = false;
+        if (this.state.drawerOpen) {
+            this._closeDrawer({ restoreFocus: false });
+        }
     }
 
     /** Ir a Ajustes (configuración general) */
     goToSettings() {
         const menu = this._menuIndex.get(SETTINGS_MENU_XMLID);
         this._open(menu ? resolveLeaf(menu, this.menuService) : null);
-        this.state.drawerOpen = false;
+        if (this.state.drawerOpen) {
+            this._closeDrawer({ restoreFocus: false });
+        }
+    }
+
+    goHome() {
+        const menu = this._menuIndex.get("erpico_web_sidebar.menu_home_root");
+        if (menu) {
+            this._open(resolveLeaf(menu, this.menuService) || menu);
+        } else {
+            window.location.assign("/odoo");
+        }
+    }
+
+    get canAccessSettings() {
+        return this._menuIndex?.has(SETTINGS_MENU_XMLID);
+    }
+
+    get drawerOtherApps() {
+        const mappedAppIds = new Set(this.state.entries.flatMap((entry) => entry.appIds));
+        return this.state.otherApps.filter((app) => !mappedAppIds.has(app.id));
+    }
+
+    toggleDrawerAllApps() {
+        this.state.drawerAllAppsOpen = !this.state.drawerAllAppsOpen;
     }
 
     _cancelHoverTimer() {

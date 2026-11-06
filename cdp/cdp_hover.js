@@ -34,7 +34,7 @@ async function main() {
         await page.waitForSelector('#login', { timeout: 10000 });
         await page.type('#login', ADMIN_USERNAME);
         await page.type('#password', ADMIN_PASSWORD);
-        await page.click('button.btn-primary[type="submit"]');
+        await page.click('.oe_login_form button[type="submit"]');
         await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 });
         await sleep(3000);
 
@@ -62,7 +62,7 @@ async function main() {
         console.log(`  [H3] Flyout tras hover: ${flyoutVisible ? 'visible' : 'NO visible'}`);
         if (!flyoutVisible) errors.push(`Flyout not visible after hover ${firstTitle}`);
 
-        // Test S-014: transición rápida botón1 → botón2 → flyout debe re-renderizar y quedarse
+        // Test S-014: transiciÃ³n rÃ¡pida botÃ³n1 â†’ botÃ³n2 â†’ flyout debe re-renderizar y quedarse
         if (allBtns.length >= 2) {
             const secondBtn = allBtns[1];
             const secondTitle = await page.evaluate(el => el.getAttribute('title'), secondBtn);
@@ -70,35 +70,35 @@ async function main() {
             await sleep(800);
             const flyout2 = await page.$('.o_erpico_flyout');
             const flyout2Visible = flyout2 && (await flyout2.evaluate(el => getComputedStyle(el).display !== 'none'));
-            console.log(`  [H4] Hover "${secondTitle}" → flyout ${flyout2Visible ? 'visible' : 'NO visible'}`);
-            if (!flyout2Visible) errors.push('BUG-S-014: flyout no visible en transición rápida');
+            console.log(`  [H4] Hover "${secondTitle}" â†’ flyout ${flyout2Visible ? 'visible' : 'NO visible'}`);
+            if (!flyout2Visible) errors.push('BUG-S-014: flyout no visible en transiciÃ³n rÃ¡pida');
 
             await sleep(600);
             const flyout2After = await page.$('.o_erpico_flyout');
             const flyout2AfterVisible = flyout2After && (await flyout2After.evaluate(el => getComputedStyle(el).display !== 'none'));
-            console.log(`  [H5] +600ms → flyout ${flyout2AfterVisible ? 'sigue visible (FIX OK)' : 'cerrado (BUG)'}`);
-            if (!flyout2AfterVisible) errors.push('BUG-S-014: flyout se cierra en transición rápida');
+            console.log(`  [H5] +600ms â†’ flyout ${flyout2AfterVisible ? 'sigue visible (FIX OK)' : 'cerrado (BUG)'}`);
+            if (!flyout2AfterVisible) errors.push('BUG-S-014: flyout se cierra en transiciÃ³n rÃ¡pida');
 
-            // mouseleave (sacando mouse del rail) → flyout debe cerrarse tras debounce
+            // mouseleave (sacando mouse del rail) â†’ flyout debe cerrarse tras debounce
             await page.mouse.move(0, 0);
             await sleep(500);
             const flyout3 = await page.$('.o_erpico_flyout');
             const flyout3Visible = flyout3 && (await flyout3.evaluate(el => el.offsetParent !== null && getComputedStyle(el).display !== 'none'));
-            console.log(`  [H6] mouseleave +500ms → flyout ${flyout3Visible ? 'sigue (BUG)' : 'cerrado (OK)'}`);
+            console.log(`  [H6] mouseleave +500ms â†’ flyout ${flyout3Visible ? 'sigue (BUG)' : 'cerrado (OK)'}`);
             if (flyout3Visible) errors.push('Flyout no cierra tras mouseleave');
         }
 
         console.log('');
         console.log('=== Resumen Hover ===');
         if (errors.length === 0) {
-            console.log('✅ Todos los checks pasaron (hover estable tras fix S-014)');
+            console.log('âœ… Todos los checks pasaron (hover estable tras fix S-014)');
         } else {
-            console.log(`❌ ${errors.length} error(es):`);
+            console.log(`âŒ ${errors.length} error(es):`);
             errors.forEach(e => console.log(`  - ${e}`));
         }
     } catch (e) {
         errors.push(e.message);
-        console.log(`  ❌ ${e.message}`);
+        console.log(`  âŒ ${e.message}`);
     }
 
     await browser.close();
